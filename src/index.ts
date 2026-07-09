@@ -3,6 +3,9 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema, Tool } from "@modelcontextprotocol/sdk/types.js";
 import { DevToClient } from "./devto-client.js";
+import { CapabilityError, requireCapability } from "./agent-capability.js";
+
+const REQUIRED_CAPABILITY = "content"; // HERALD owns Dev.to content
 
 const API_KEY = process.env.DEVTO_API_KEY;
 if (!API_KEY) {
@@ -40,32 +43,37 @@ const tools: Tool[] = [
   },
   {
     name: "devto_create_article",
-    description: "Create a new Dev.to article (set published:false to save as a draft)",
+    description:
+      "Create a new Dev.to article (set published:false to save as a draft). Requires agent_id " +
+      "(must hold the 'content' capability, e.g. herald).",
     inputSchema: {
       type: "object",
       properties: {
+        agent_id: { type: "string", description: "Your fleet-board agent id, e.g. 'herald'" },
         title: { type: "string" },
         body_markdown: { type: "string", description: "Full article body in Markdown" },
         published: { type: "boolean", description: "true to publish immediately, false for a draft" },
         tags: { type: "array", items: { type: "string" }, description: "Up to 4 tags" },
         canonical_url: { type: "string", description: "Original URL if this is a cross-post" },
       },
-      required: ["title", "body_markdown"],
+      required: ["agent_id", "title", "body_markdown"],
     },
   },
   {
     name: "devto_update_article",
-    description: "Update an existing Dev.to article by id",
+    description:
+      "Update an existing Dev.to article by id. Requires agent_id (must hold the 'content' capability).",
     inputSchema: {
       type: "object",
       properties: {
+        agent_id: { type: "string", description: "Your fleet-board agent id, e.g. 'herald'" },
         id: { type: "number" },
         title: { type: "string" },
         body_markdown: { type: "string" },
         published: { type: "boolean" },
         tags: { type: "array", items: { type: "string" } },
       },
-      required: ["id"],
+      required: ["agent_id", "id"],
     },
   },
 ];
@@ -89,6 +97,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       result = await client.getArticle(args.id as number);
       break;
     case "devto_create_article":
+      await requireCapability(args.agent_id as string | undefined, REQUIRED_CAPABILITY);
       result = await client.createArticle({
         title: args.title as string,
         body_markdown: args.body_markdown as string,
@@ -98,6 +107,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       });
       break;
     case "devto_update_article":
+      await requireCapability(args.agent_id as string | undefined, REQUIRED_CAPABILITY);
       result = await client.updateArticle(args.id as number, {
         title: args.title as string | undefined,
         body_markdown: args.body_markdown as string | undefined,
