@@ -1,7 +1,7 @@
 {
   "name": "devto-mcp",
   "version": "1.0.0",
-  "description": "Minimal MCP server for the Dev.to (Forem) API - list/get/create/update articles.",
+  "description": "Minimal MCP server for the Dev.to (Forem) API",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -17,5 +17,17 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0"
-  }
+  },
+  "author": "Nathan Graves",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/N-Graves/devto-mcp.git"
+  },
+  "keywords": [
+    "mcp",
+    "devto",
+    "dev.to",
+    "model-context-protocol"
+  ]
 }
