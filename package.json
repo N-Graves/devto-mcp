@@ -1,0 +1,21 @@
+{
+  "name": "devto-mcp",
+  "version": "1.0.0",
+  "description": "Minimal MCP server for the Dev.to (Forem) API - list/get/create/update articles.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "devto-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
