@@ -1,6 +1,6 @@
 {
   "name": "devto-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Minimal MCP server for the Dev.to (Forem) API",
   "type": "module",
   "main": "dist/index.js",
