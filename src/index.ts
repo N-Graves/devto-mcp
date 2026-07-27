@@ -44,15 +44,16 @@ const tools: Tool[] = [
   {
     name: "devto_create_article",
     description:
-      "Create a new Dev.to article (set published:false to save as a draft). Requires agent_id " +
-      "(must hold the 'content' capability, e.g. herald).",
+      "Create a new Dev.to article. It is ALWAYS created as a DRAFT - there is no argument that " +
+      "publishes it, and the server hard-codes published:false. Submit the draft's id/URL for HITL " +
+      "review; Nathan publishes it himself in Dev.to. Requires agent_id (must hold the 'content' " +
+      "capability, e.g. herald).",
     inputSchema: {
       type: "object",
       properties: {
         agent_id: { type: "string", description: "Your fleet-board agent id, e.g. 'herald'" },
         title: { type: "string" },
         body_markdown: { type: "string", description: "Full article body in Markdown" },
-        published: { type: "boolean", description: "true to publish immediately, false for a draft" },
         tags: { type: "array", items: { type: "string" }, description: "Up to 4 tags" },
         canonical_url: { type: "string", description: "Original URL if this is a cross-post" },
       },
@@ -62,7 +63,9 @@ const tools: Tool[] = [
   {
     name: "devto_update_article",
     description:
-      "Update an existing Dev.to article by id. Requires agent_id (must hold the 'content' capability).",
+      "Update an existing Dev.to article's content by id. It CANNOT change publish state in either " +
+      "direction - a draft stays a draft, a live post stays live. Use it to correct a draft after " +
+      "review feedback. Requires agent_id (must hold the 'content' capability).",
     inputSchema: {
       type: "object",
       properties: {
@@ -70,7 +73,6 @@ const tools: Tool[] = [
         id: { type: "number" },
         title: { type: "string" },
         body_markdown: { type: "string" },
-        published: { type: "boolean" },
         tags: { type: "array", items: { type: "string" } },
       },
       required: ["agent_id", "id"],
@@ -101,7 +103,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       result = await client.createArticle({
         title: args.title as string,
         body_markdown: args.body_markdown as string,
-        published: args.published as boolean | undefined,
         tags: args.tags as string[] | undefined,
         canonical_url: args.canonical_url as string | undefined,
       });
@@ -111,7 +112,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       result = await client.updateArticle(args.id as number, {
         title: args.title as string | undefined,
         body_markdown: args.body_markdown as string | undefined,
-        published: args.published as boolean | undefined,
         tags: args.tags as string[] | undefined,
       });
       break;
