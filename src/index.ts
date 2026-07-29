@@ -4,8 +4,11 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema, Tool } from "@modelcontextprotocol/sdk/types.js";
 import { ArticleState, DevToClient } from "./devto-client.js";
 import { CapabilityError, requireCapability } from "./agent-capability.js";
+import { requireBrand, BrandError } from "./brand-gate.js";
 
 const REQUIRED_CAPABILITY = "content"; // HERALD owns Dev.to content
+// This server publishes for NAS DIGITAL only - see brand-gate.ts. With Nate work goes to Instagram/Facebook/Threads instead.
+const SERVER_BRAND = "nas_digital";
 
 /**
  * Coverage note (audit 2026-07-27, against the official Forem OpenAPI spec and
@@ -170,6 +173,12 @@ const tools: Tool[] = [
       type: "object",
       properties: {
         agent_id: { type: "string", description: "Your fleet-board agent id, e.g. 'herald'" },
+        task_id: {
+          type: "string",
+          description:
+            "The board task this belongs to. This is a NAS DIGITAL channel - the task's "
+            + "brand must be nas_digital, or it is refused. With Nate work goes to Instagram/Facebook/Threads instead.",
+        },
         title: { type: "string" },
         body_markdown: { type: "string", description: "Full article body in Markdown" },
         tags: { type: "array", items: { type: "string" }, description: "Up to 4 tags" },
@@ -189,7 +198,7 @@ const tools: Tool[] = [
         series: { type: "string", description: "Series name; the same string groups articles together" },
         canonical_url: { type: "string", description: "Original URL if this is a cross-post" },
       },
-      required: ["agent_id", "title", "body_markdown"],
+      required: ["agent_id", "task_id", "title", "body_markdown"],
     },
   },
   {
@@ -275,6 +284,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // --- mutations: gated to the "content" capability ---------------------
       case "devto_create_article":
         await requireCapability(args.agent_id as string | undefined, REQUIRED_CAPABILITY);
+        await requireBrand(args.task_id as string | undefined, SERVER_BRAND);
         result = await client.createArticle({
           title: args.title as string,
           body_markdown: args.body_markdown as string,
